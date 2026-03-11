@@ -10,8 +10,9 @@ import sqlite3
 from datetime import datetime, timezone
 
 from models.job_listing import JobListing
-from config import (
-    DB_PATH, EXPORT_MIN_SCORE, EXPORT_MAX_LISTINGS,
+from config import EXPORT_MIN_SCORE
+from constants import (
+    DB_PATH, EXPORT_MAX_LISTINGS,
     EXPORT_PATH, EXPORT_ALL_PATH,
     EXPORT_CSV_PATH, EXPORT_ALL_CSV_PATH,
 )

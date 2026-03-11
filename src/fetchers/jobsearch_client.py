@@ -8,9 +8,8 @@ import os
 import requests
 from dotenv import load_dotenv
 
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from config import FETCH_LIMIT_PER_PAGE, POLITE_DELAY_SECONDS, OCCUPATION_FIELD_DATA_IT, REGION_CODES
+from constants import FETCH_LIMIT_PER_PAGE, POLITE_DELAY_SECONDS
+from config import OCCUPATION_FIELD_DATA_IT, REGION_CODES
 
 load_dotenv()
 

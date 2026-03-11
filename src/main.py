@@ -19,9 +19,9 @@ import textwrap
 
 # ── Local imports ─────────────────────────────────────────────────────────────
 from config import (
-    SEARCH_QUERIES, OCCUPATION_FIELD_DATA_IT, REGION_CODES,
-    JOBSEARCH_FALLBACK_THRESHOLD, EXPORT_MIN_SCORE, EXPORT_MAX_LISTINGS,
+    SEARCH_QUERIES, OCCUPATION_FIELD_DATA_IT, REGION_CODES, EXPORT_MIN_SCORE,
 )
+from constants import JOBSEARCH_FALLBACK_THRESHOLD, EXPORT_MAX_LISTINGS
 from fetchers.jobsearch_client import fetch_all_jobs, get_total_count
 from fetchers.jobadlinks_client import fetch_all_jobad_links, merge_and_deduplicate
 from parsers.ad_parser import parse_ads

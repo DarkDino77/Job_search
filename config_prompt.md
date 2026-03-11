@@ -22,26 +22,20 @@ The generated config.py will be imported directly by a running Python program.
 If you use any variable name other than the ones listed below, the program will
 crash with an ImportError. These names are non-negotiable.
 
-The program imports **exactly these variable names** — copy them letter-for-letter:
+The program imports **exactly these variable names from `config.py`** — copy them letter-for-letter:
 
 ```
-SEARCH_QUERIES               ← list of search query strings
-OCCUPATION_FIELD_DATA_IT     ← single string: a JobTech concept ID or ""
-REGION_CODES                 ← list of Swedish region code strings, or []
-SCORE_HIGH                   ← list of high-weight keyword strings
-SCORE_MEDIUM                 ← list of medium-weight keyword strings
-SCORE_PENALTY                ← list of penalty keyword strings
-DB_PATH                      ← string: always "output/jobs.db"
-EXPORT_MIN_SCORE             ← float between 0.0 and 1.0
-EXPORT_MAX_LISTINGS          ← integer: always 30
-EXPORT_PATH                  ← string: always "output/job_listings.json"
-EXPORT_ALL_PATH              ← string: always "output/job_listings_all.json"
-EXPORT_CSV_PATH              ← string: always "output/job_listings.csv"   
-EXPORT_ALL_CSV_PATH          ← string: always "output/job_listings_all.csv"
-FETCH_LIMIT_PER_PAGE         ← integer: always 100
-JOBSEARCH_FALLBACK_THRESHOLD ← integer: always 50
-POLITE_DELAY_SECONDS         ← float: always 1.0
+SEARCH_QUERIES           ← list of search query strings
+OCCUPATION_FIELD_DATA_IT ← single string: a JobTech concept ID or ""
+REGION_CODES             ← list of Swedish region code strings, or []
+SCORE_HIGH               ← list of high-weight keyword strings
+SCORE_MEDIUM             ← list of medium-weight keyword strings
+SCORE_PENALTY            ← list of penalty keyword strings
+EXPORT_MIN_SCORE         ← float between 0.0 and 1.0
 ```
+
+All fixed infrastructure values (paths, limits, delays) live in `constants.py`
+and must **not** be added to `config.py`.
 
 Common mistakes that will break the program — do NOT do these:
 - ❌ `OCCUPATION_FIELD_ID`       → must be `OCCUPATION_FIELD_DATA_IT`
@@ -113,9 +107,10 @@ Common mistakes that will break the program — do NOT do these:
 7. **All keyword lists must contain at least 8 items.**
    Add both Swedish and English variants where applicable.
 
-8. **The locked settings block must be copied exactly** — do not alter the
-   values of DB_PATH, EXPORT_PATH, EXPORT_ALL_PATH, EXPORT_MAX_LISTINGS,
-   FETCH_LIMIT_PER_PAGE, JOBSEARCH_FALLBACK_THRESHOLD, or POLITE_DELAY_SECONDS.
+8. **Do not include any infrastructure constants in config.py.**
+   DB_PATH, all EXPORT_* paths, FETCH_LIMIT_PER_PAGE, JOBSEARCH_FALLBACK_THRESHOLD,
+   and POLITE_DELAY_SECONDS all live in `constants.py`. Adding them to `config.py`
+   will cause import conflicts.
 
 9. **Add a comment block at the top** summarising your reading of the CV:
    ```python
@@ -161,19 +156,8 @@ SCORE_PENALTY = [
     # Experience thresholds and role types that are NOT a fit
 ]
 
-# ── Storage (DO NOT CHANGE) ───────────────────
-DB_PATH = "output/jobs.db"
-
-# ── Export settings ───────────────────────────
+# ── Export threshold ──────────────────────────
 EXPORT_MIN_SCORE = 0.5   # 0.5 for graduate, 0.4 for mid, 0.3 for senior
-EXPORT_MAX_LISTINGS = 30
-EXPORT_PATH     = "output/job_listings.json"      # top-scored, for AI evaluation
-EXPORT_ALL_PATH = "output/job_listings_all.json"  # every job in the database
-
-# ── Fetch settings (DO NOT CHANGE) ───────────
-FETCH_LIMIT_PER_PAGE = 100
-JOBSEARCH_FALLBACK_THRESHOLD = 50
-POLITE_DELAY_SECONDS = 1.0
 
 ---
 
