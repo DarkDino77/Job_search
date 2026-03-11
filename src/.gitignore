@@ -1,0 +1,15 @@
+# Output folder — generated data, never commit
+output/
+
+# Python
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+
+# Virtual environments
+venv/
+.venv/
+config.py
