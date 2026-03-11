@@ -36,6 +36,8 @@ EXPORT_MIN_SCORE             ← float between 0.0 and 1.0
 EXPORT_MAX_LISTINGS          ← integer: always 30
 EXPORT_PATH                  ← string: always "output/job_listings.json"
 EXPORT_ALL_PATH              ← string: always "output/job_listings_all.json"
+EXPORT_CSV_PATH              ← string: always "output/job_listings.csv"   
+EXPORT_ALL_CSV_PATH          ← string: always "output/job_listings_all.csv"
 FETCH_LIMIT_PER_PAGE         ← integer: always 100
 JOBSEARCH_FALLBACK_THRESHOLD ← integer: always 50
 POLITE_DELAY_SECONDS         ← float: always 1.0
