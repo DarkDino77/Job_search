@@ -345,3 +345,105 @@ def export_all_csv(
     finally:
         conn.close()
     return _write_csv(listings, output_path)
+
+
+# ── Location-filtered exports ─────────────────────────────────────────────────
+
+def _apply_location_filter(
+    listings: list[dict],
+    terms: list[str],
+    exclude: bool = False,
+) -> list[dict]:
+    """
+    Filter listings by location terms.
+
+    Each term is matched (case-insensitive) against both the `location`
+    (city) and `municipality` columns — a listing matches if EITHER field
+    contains the term as a substring.  Multiple terms are OR-ed together,
+    so a listing only needs to match one term to be included/excluded.
+
+    Args:
+        listings: raw dicts from the database.
+        terms:    list of location strings, e.g. ["linköping", "norrköping"].
+        exclude:  False → keep only matching listings (include mode).
+                  True  → remove matching listings (exclude mode, -E flag).
+    """
+    if not terms:
+        return listings
+
+    # Each term may contain multiple words (e.g. "Solna Stockholm").
+    # Split every term into individual words so each word is checked
+    # independently against both city and municipality.
+    # A listing matches if ANY word from ANY term hits either field.
+    words = [word.lower().strip() for term in terms for word in term.split()]
+
+    def matches(row: dict) -> bool:
+        city = (row.get("location") or "").lower()
+        muni = (row.get("municipality") or "").lower()
+        return any(word in city or word in muni for word in words)
+
+    if exclude:
+        return [r for r in listings if not matches(r)]
+    else:
+        return [r for r in listings if matches(r)]
+
+
+def _fetch_all_rows(db_path: str = DB_PATH) -> list[dict]:
+    """Return every job from the database sorted by relevance score desc."""
+    init_db(db_path)
+    conn = get_connection(db_path)
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, title, company, location, municipality,
+                   date_published, last_date_application,
+                   description_text, employment_type, duration, scope,
+                   url, source_api, relevance_score, fetched_at
+            FROM jobs
+            ORDER BY relevance_score DESC
+            """
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def export_location_csv(
+    terms: list[str],
+    exclude: bool = False,
+    output_path: str = "output/job_listings_location.csv",
+    db_path: str = DB_PATH,
+) -> int:
+    """
+    Export jobs filtered by location to a CSV file.
+
+    Args:
+        terms:   location strings matched against city and municipality.
+        exclude: if True, matching jobs are removed instead of kept.
+    """
+    listings = _apply_location_filter(_fetch_all_rows(db_path), terms, exclude)
+    mode = "excluded" if exclude else "matching"
+    print(f"  [location-csv] {len(listings)} listings ({mode} {terms})")
+    return _write_csv(listings, output_path)
+
+
+def export_location_json(
+    terms: list[str],
+    exclude: bool = False,
+    output_path: str = "output/job_listings_location.json",
+    db_path: str = DB_PATH,
+) -> int:
+    """
+    Export jobs filtered by location to a JSON file.
+
+    Args:
+        terms:   location strings matched against city and municipality.
+        exclude: if True, matching jobs are removed instead of kept.
+    """
+    listings = _apply_location_filter(_fetch_all_rows(db_path), terms, exclude)
+    _ensure_output_dir(output_path)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(listings, f, ensure_ascii=False, indent=2)
+    mode = "excluded" if exclude else "matching"
+    print(f"  [location-json] {len(listings)} listings ({mode} {terms}) → {output_path}")
+    return len(listings)

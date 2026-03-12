@@ -27,7 +27,7 @@ from fetchers.jobadlinks_client import fetch_all_jobad_links, merge_and_deduplic
 from parsers.ad_parser import parse_ads
 from pipeline.cleaner import clean_all
 from pipeline.scorer import score_all
-from pipeline.storage import save_listings, query_top, full_text_search, export_top_listings, export_all_listings, export_top_csv, export_all_csv, get_stats
+from pipeline.storage import save_listings, query_top, full_text_search, export_top_listings, export_all_listings, export_top_csv, export_all_csv, export_location_csv, export_location_json, get_stats
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -185,6 +185,38 @@ def cmd_export_all_csv(args) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+#  EXPORT LOCATION
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _location_summary(terms: list[str], exclude: bool) -> str:
+    mode = "excluding" if exclude else "only"
+    quoted = ", ".join(f'"{t}"' for t in terms)
+    return f"{mode} locations: {quoted}"
+
+
+def cmd_export_location_csv(args) -> None:
+    """Export jobs filtered by location to output/job_listings_location.csv."""
+    count = export_location_csv(terms=args.locations, exclude=args.exclude)
+    if count == 0:
+        hint = "Try different locations or run 'python main.py fetch' first."
+        print(f"Nothing to export. {hint}")
+    else:
+        print(f"\n✓ Exported {count} listings ({_location_summary(args.locations, args.exclude)})")
+        print("  → output/job_listings_location.csv")
+
+
+def cmd_export_location_json(args) -> None:
+    """Export jobs filtered by location to output/job_listings_location.json."""
+    count = export_location_json(terms=args.locations, exclude=args.exclude)
+    if count == 0:
+        hint = "Try different locations or run 'python main.py fetch' first."
+        print(f"Nothing to export. {hint}")
+    else:
+        print(f"\n✓ Exported {count} listings ({_location_summary(args.locations, args.exclude)})")
+        print("  → output/job_listings_location.json")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 #  STATS
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -215,6 +247,9 @@ def build_parser() -> argparse.ArgumentParser:
               python main.py export-all
               python main.py export-csv
               python main.py export-all-csv
+              python main.py export-location-csv linköping norrköping
+              python main.py export-location-csv -E stockholm
+              python main.py export-location-json linköping
               python main.py stats
         """),
     )
@@ -254,6 +289,48 @@ def build_parser() -> argparse.ArgumentParser:
     # export-all-csv (CSV all)
     sub.add_parser("export-all-csv", help="Export every job in the DB to output/job_listings_all.csv")
 
+    # export-location-csv
+    loc_csv_p = sub.add_parser(
+        "export-location-csv",
+        help="Export jobs filtered by location to output/job_listings_location.csv",
+        description=(
+            "Filter the database by city/municipality before exporting to CSV.\n"
+            "Each LOCATION term is matched against both the city and municipality columns.\n\n"
+            "Include mode (default): export only jobs that match at least one term.\n"
+            "Exclude mode (-E):      export all jobs EXCEPT those matching a term."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    loc_csv_p.add_argument(
+        "locations", nargs="+",
+        help='Location terms to match, e.g. linköping norrköping stockholm',
+    )
+    loc_csv_p.add_argument(
+        "-E", "--exclude", action="store_true", default=False,
+        help="Exclude matching locations instead of keeping them",
+    )
+
+    # export-location-json
+    loc_json_p = sub.add_parser(
+        "export-location-json",
+        help="Export jobs filtered by location to output/job_listings_location.json",
+        description=(
+            "Filter the database by city/municipality before exporting to JSON.\n"
+            "Each LOCATION term is matched against both the city and municipality columns.\n\n"
+            "Include mode (default): export only jobs that match at least one term.\n"
+            "Exclude mode (-E):      export all jobs EXCEPT those matching a term."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    loc_json_p.add_argument(
+        "locations", nargs="+",
+        help='Location terms to match, e.g. linköping norrköping stockholm',
+    )
+    loc_json_p.add_argument(
+        "-E", "--exclude", action="store_true", default=False,
+        help="Exclude matching locations instead of keeping them",
+    )
+
     # stats
     sub.add_parser("stats", help="Show database statistics")
 
@@ -265,14 +342,16 @@ def main() -> None:
     args   = parser.parse_args()
 
     commands = {
-        "fetch":          cmd_fetch,
-        "show":           cmd_show,
-        "search":         cmd_search,
-        "export":         cmd_export,
-        "export-all":     cmd_export_all,
-        "export-csv":     cmd_export_csv,
-        "export-all-csv": cmd_export_all_csv,
-        "stats":          cmd_stats,
+        "fetch":                 cmd_fetch,
+        "show":                  cmd_show,
+        "search":                cmd_search,
+        "export":                cmd_export,
+        "export-all":            cmd_export_all,
+        "export-csv":            cmd_export_csv,
+        "export-all-csv":        cmd_export_all_csv,
+        "export-location-csv":   cmd_export_location_csv,
+        "export-location-json":  cmd_export_location_json,
+        "stats":                 cmd_stats,
     }
 
     if args.command not in commands:
